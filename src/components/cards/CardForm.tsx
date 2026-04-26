@@ -223,6 +223,15 @@ export function CardForm({ mode, cardId }: CardFormProps) {
     document.querySelector(`[data-error-key="${firstKey}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  function getErrorMessage(error: unknown) {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "object" && error && "message" in error && typeof error.message === "string") {
+      return error.message;
+    }
+    if (typeof error === "string") return error;
+    return "카드 저장 중 알 수 없는 오류가 발생했습니다.";
+  }
+
   async function persist(status: CardStatus) {
     if (!isSupabaseConfigured()) {
       setFormError("Supabase 환경변수를 설정한 뒤 저장할 수 있습니다.");
@@ -239,6 +248,7 @@ export function CardForm({ mode, cardId }: CardFormProps) {
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
+      setFormError("입력값을 확인해 주세요. 첫 번째 오류 위치로 이동합니다.");
       scrollToFirstError(nextErrors);
       return;
     }
@@ -246,118 +256,120 @@ export function CardForm({ mode, cardId }: CardFormProps) {
     setSaving(draft ? "draft" : "save");
     setFormError("");
 
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-    if (!user) {
+      if (!user) {
+        throw new Error("로그인 세션을 확인할 수 없습니다.");
+      }
+
+      const row = {
+        user_id: user.id,
+        card_purpose: normalizedValues.cardPurpose,
+        card_name: normalizedValues.cardName,
+        status,
+        main_image_url: normalizedValues.mainImageUrl || null,
+        self_introduction: normalizedValues.selfIntroduction,
+        education_level: normalizedValues.educationLevel || null,
+        job_type: normalizedValues.jobType || null,
+        preferred_age_ranges: normalizedValues.preferredAgeRanges,
+        meeting_timelines: normalizedValues.meetingTimelines,
+        partner_priority: normalizedValues.partnerPriority,
+        reasons_for_use: normalizedValues.reasonsForUse,
+        preferred_regions: normalizedValues.preferredRegions,
+        industry_role: normalizedValues.industryRole || null,
+        career_range: normalizedValues.careerRange || null,
+        desired_industry_roles: normalizedValues.desiredIndustryRoles,
+        network_meeting_types: normalizedValues.networkMeetingTypes,
+        dating_values: normalizedValues.datingValues,
+        local_distance: normalizedValues.localDistance || null,
+        local_activities: normalizedValues.localActivities,
+        available_times: normalizedValues.availableTimes,
+        hobby_ids: normalizedValues.hobbyIds,
+        hobby_level: normalizedValues.hobbyLevel || null,
+        hobby_participation_types: normalizedValues.hobbyParticipationTypes,
+        agreed_card_disclosure: normalizedValues.agreedCardDisclosure,
+        agreed_contact_disclosure: normalizedValues.agreedContactDisclosure,
+        updated_at: new Date().toISOString(),
+      };
+
+      let savedCardId = cardId;
+
+      if (mode === "edit" && cardId) {
+        const { data, error: updateError } = await supabase
+          .from("matching_cards")
+          .update(row)
+          .eq("id", cardId)
+          .eq("user_id", user.id)
+          .select("id")
+          .maybeSingle();
+
+        if (updateError) {
+          throw updateError;
+        }
+
+        if (!data) {
+          throw new Error("수정할 카드를 찾을 수 없습니다. 다시 로그인한 뒤 시도해 주세요.");
+        }
+      } else {
+        const { data, error: insertError } = await supabase.from("matching_cards").insert(row).select("id").single();
+        if (insertError || !data) {
+          throw insertError ?? new Error("카드 저장에 실패했습니다.");
+        }
+        savedCardId = data.id as string;
+      }
+
+      if (!savedCardId) {
+        throw new Error("저장된 카드 ID를 확인할 수 없습니다.");
+      }
+
+      const [deleteImagesResult, deleteSocialsResult] = await Promise.all([
+        supabase.from("matching_card_images").delete().eq("card_id", savedCardId),
+        supabase.from("social_accounts").delete().eq("card_id", savedCardId),
+      ]);
+
+      if (deleteImagesResult.error || deleteSocialsResult.error) {
+        throw deleteImagesResult.error ?? deleteSocialsResult.error ?? new Error("연결 정보 정리에 실패했습니다.");
+      }
+
+      if (normalizedValues.additionalImageUrls.length) {
+        const { error: imageInsertError } = await supabase.from("matching_card_images").insert(
+          normalizedValues.additionalImageUrls.map((imageUrl, index) => ({
+            card_id: savedCardId,
+            image_url: imageUrl,
+            sort_order: index,
+          })),
+        );
+
+        if (imageInsertError) {
+          throw imageInsertError;
+        }
+      }
+
+      if (normalizedValues.socialAccounts.length) {
+        const { error: socialInsertError } = await supabase.from("social_accounts").insert(
+          normalizedValues.socialAccounts.map((account) => ({
+            card_id: savedCardId,
+            platform: account.platform,
+            url_or_id: account.urlOrId.trim(),
+          })),
+        );
+
+        if (socialInsertError) {
+          throw socialInsertError;
+        }
+      }
+
+      setDirty(false);
+      router.push(`/dashboard/cards/${savedCardId}`);
+      router.refresh();
+    } catch (error) {
       setSaving("");
-      setFormError("로그인 세션을 확인할 수 없습니다.");
-      return;
+      setFormError(getErrorMessage(error));
     }
-
-    const row = {
-      user_id: user.id,
-      card_purpose: normalizedValues.cardPurpose,
-      card_name: normalizedValues.cardName,
-      status,
-      main_image_url: normalizedValues.mainImageUrl || null,
-      self_introduction: normalizedValues.selfIntroduction,
-      education_level: normalizedValues.educationLevel || null,
-      job_type: normalizedValues.jobType || null,
-      preferred_age_ranges: normalizedValues.preferredAgeRanges,
-      meeting_timelines: normalizedValues.meetingTimelines,
-      partner_priority: normalizedValues.partnerPriority,
-      reasons_for_use: normalizedValues.reasonsForUse,
-      preferred_regions: normalizedValues.preferredRegions,
-      industry_role: normalizedValues.industryRole || null,
-      career_range: normalizedValues.careerRange || null,
-      desired_industry_roles: normalizedValues.desiredIndustryRoles,
-      network_meeting_types: normalizedValues.networkMeetingTypes,
-      dating_values: normalizedValues.datingValues,
-      local_distance: normalizedValues.localDistance || null,
-      local_activities: normalizedValues.localActivities,
-      available_times: normalizedValues.availableTimes,
-      hobby_ids: normalizedValues.hobbyIds,
-      hobby_level: normalizedValues.hobbyLevel || null,
-      hobby_participation_types: normalizedValues.hobbyParticipationTypes,
-      agreed_card_disclosure: normalizedValues.agreedCardDisclosure,
-      agreed_contact_disclosure: normalizedValues.agreedContactDisclosure,
-      updated_at: new Date().toISOString(),
-    };
-
-    let savedCardId = cardId;
-
-    if (mode === "edit" && cardId) {
-      const { error: updateError } = await supabase.from("matching_cards").update(row).eq("id", cardId).eq("user_id", user.id);
-      if (updateError) {
-        setSaving("");
-        setFormError(updateError.message);
-        return;
-      }
-    } else {
-      const { data, error: insertError } = await supabase.from("matching_cards").insert(row).select("id").single();
-      if (insertError || !data) {
-        setSaving("");
-        setFormError(insertError?.message ?? "카드 저장에 실패했습니다.");
-        return;
-      }
-      savedCardId = data.id as string;
-    }
-
-    if (!savedCardId) {
-      setSaving("");
-      setFormError("저장된 카드 ID를 확인할 수 없습니다.");
-      return;
-    }
-
-    const [deleteImagesResult, deleteSocialsResult] = await Promise.all([
-      supabase.from("matching_card_images").delete().eq("card_id", savedCardId),
-      supabase.from("social_accounts").delete().eq("card_id", savedCardId),
-    ]);
-
-    if (deleteImagesResult.error || deleteSocialsResult.error) {
-      setSaving("");
-      setFormError(deleteImagesResult.error?.message ?? deleteSocialsResult.error?.message ?? "연결 정보 정리에 실패했습니다.");
-      return;
-    }
-
-    if (normalizedValues.additionalImageUrls.length) {
-      const { error: imageInsertError } = await supabase.from("matching_card_images").insert(
-        normalizedValues.additionalImageUrls.map((imageUrl, index) => ({
-          card_id: savedCardId,
-          image_url: imageUrl,
-          sort_order: index,
-        })),
-      );
-
-      if (imageInsertError) {
-        setSaving("");
-        setFormError(imageInsertError.message);
-        return;
-      }
-    }
-
-    if (normalizedValues.socialAccounts.length) {
-      const { error: socialInsertError } = await supabase.from("social_accounts").insert(
-        normalizedValues.socialAccounts.map((account) => ({
-          card_id: savedCardId,
-          platform: account.platform,
-          url_or_id: account.urlOrId.trim(),
-        })),
-      );
-
-      if (socialInsertError) {
-        setSaving("");
-        setFormError(socialInsertError.message);
-        return;
-      }
-    }
-
-    setDirty(false);
-    router.push(`/dashboard/cards/${savedCardId}`);
-    router.refresh();
   }
 
   function renderChipGroup(
