@@ -232,6 +232,18 @@ export function CardForm({ mode, cardId }: CardFormProps) {
     return "카드 저장 중 알 수 없는 오류가 발생했습니다.";
   }
 
+  function getValidationMessage(nextErrors: Record<string, string>) {
+    const messages = Array.from(new Set(Object.values(nextErrors))).filter(Boolean);
+    if (messages.length === 0) return "입력값을 확인해 주세요.";
+
+    const visibleMessages = messages.slice(0, 3).join(" / ");
+    const hiddenCount = messages.length - 3;
+
+    return hiddenCount > 0
+      ? `입력값을 확인해 주세요: ${visibleMessages} 외 ${hiddenCount}개`
+      : `입력값을 확인해 주세요: ${visibleMessages}`;
+  }
+
   async function persist(status: CardStatus) {
     if (!isSupabaseConfigured()) {
       setFormError("Supabase 환경변수를 설정한 뒤 저장할 수 있습니다.");
@@ -248,7 +260,7 @@ export function CardForm({ mode, cardId }: CardFormProps) {
     setErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
-      setFormError("입력값을 확인해 주세요. 첫 번째 오류 위치로 이동합니다.");
+      setFormError(getValidationMessage(nextErrors));
       scrollToFirstError(nextErrors);
       return;
     }

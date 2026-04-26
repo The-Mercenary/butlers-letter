@@ -169,7 +169,6 @@ export function validateCard(values: CardFormValues, options: { draft?: boolean 
     if (!values.agreedContactDisclosure) errors.agreedContactDisclosure = "상호 동의 시 연락처 공개에 동의해 주세요.";
 
     if (values.cardPurpose === "industry_network") {
-      if (!values.jobType) errors.jobType = "현재 직종을 선택해 주세요.";
       if (!values.industryRole) errors.industryRole = "현재 직무를 선택해 주세요.";
       if (!values.careerRange) errors.careerRange = "경력 구간을 선택해 주세요.";
       if (values.desiredIndustryRoles.length === 0) errors.desiredIndustryRoles = "만나고 싶은 업계/직무를 선택해 주세요.";
