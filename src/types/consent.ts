@@ -5,6 +5,7 @@ export type ConsentKey =
   | "sensitiveInfo"
   | "ageOver19"
   | "marketing"
+  | "sajuAnalysis"
   | "cardDisclosure"
   | "contactDisclosure";
 

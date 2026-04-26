@@ -18,13 +18,13 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
-    default: "Butler's Letter | 결혼을 전제로 한 프라이빗 매칭 레터",
+    default: "Butler's Letter | 프라이빗 인맥 추천 서비스",
     template: "%s | Butler's Letter",
   },
-  description: "Butler's Letter는 결혼을 진지하게 생각하는 사람들을 위한 프라이빗 프로필 기반 매칭 레터 서비스입니다.",
+  description: "Butler's Letter는 원하는 목적에 맞는 사람을 신중하게 추천받고, 서로 동의한 경우에만 연락처를 공개하는 서비스입니다.",
   openGraph: {
-    title: "Butler's Letter | 결혼을 전제로 한 프라이빗 매칭 레터",
-    description: "결혼을 진지하게 생각하는 사람들을 위한 프라이빗 프로필 기반 매칭 레터 서비스입니다.",
+    title: "Butler's Letter | 프라이빗 인맥 추천 서비스",
+    description: "원하는 목적에 맞는 사람을 신중하게 추천받고, 서로 동의한 경우에만 연락처를 공개하는 서비스입니다.",
     type: "website",
     locale: "ko_KR",
     siteName: "Butler's Letter",

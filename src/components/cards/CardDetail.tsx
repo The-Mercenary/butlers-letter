@@ -8,7 +8,13 @@ import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/common/Button";
 import { Modal } from "@/components/common/Modal";
 import { BIRTH_TIME_OPTIONS, getBirthTimeLabel } from "@/lib/constants/birthTimes";
-import { CARD_STATUS_LABELS, getEducationLabel, getJobLabel, getSocialPlatformLabel } from "@/lib/constants/cardOptions";
+import {
+  CARD_STATUS_LABELS,
+  getJobLabel,
+  getSocialPlatformLabel,
+} from "@/lib/constants/cardOptions";
+import { getHobbyLabel } from "@/lib/constants/hobbies";
+import { getCardPurposeLabel } from "@/lib/constants/recommendationPurposes";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { toMatchingCard, toMatchingCardImage, toSocialAccount, toUserProfile } from "@/lib/supabase/mappers";
 import { extractStoragePathFromPublicUrl } from "@/lib/utils/storage";
@@ -120,14 +126,26 @@ export function CardDetail({ cardId }: CardDetailProps) {
     ["태어난 시간", profile?.birthTimeCode ? getBirthTimeLabel(profile.birthTimeCode) : BIRTH_TIME_OPTIONS[0].label],
     ["이메일", profile?.email ?? "-"],
     ["휴대전화번호", profile?.phone ?? "-"],
-    ["거주지", profile ? `${profile.sido} ${profile.sigungu}` : "-"],
-    ["최종 학력", getEducationLabel(card.educationLevel)],
-    ["현재 직업", getJobLabel(card.jobType)],
-    ["매칭 가능 연령대", card.preferredAgeRanges.join(" > ") || "-"],
-    ["결혼 희망 시기", card.marriageTimelines.join(" > ") || "-"],
-    ["상대방 조건 우선순위", card.partnerPriority.join(" > ") || "-"],
-    ["자신 설명", card.reasonsForUse.join(", ") || "-"],
-    ["희망 상대 거주지", card.preferredRegions.map((region) => `${region.sido} ${region.sigungu}`).join(", ") || "-"],
+    ["거주지", profile ? `${profile.sido} ${profile.sigungu} ${profile.dong}` : "-"],
+    ["직종", profile?.industryType ?? "-"],
+    ["카드 목적", getCardPurposeLabel(card.cardPurpose)],
+    ["자기소개", card.selfIntroduction || "-"],
+    ["현재 일의 형태", getJobLabel(card.jobType)],
+    ["만나고 싶은 사람의 연령대", card.preferredAgeRanges.join(" > ") || "-"],
+    ["만남 희망 시점", card.meetingTimelines.join(" > ") || "-"],
+    ["중요하게 보는 조건 우선순위", card.partnerPriority.join(" > ") || "-"],
+    ["선호 지역", card.preferredRegions.map((region) => `${region.sido} ${region.sigungu} ${region.dong}`).join(", ") || "-"],
+    ["현재 직무", card.industryRole || "-"],
+    ["경력 구간", card.careerRange || "-"],
+    ["만나고 싶은 업계/직무", card.desiredIndustryRoles.join(", ") || "-"],
+    ["기대하는 만남 유형", card.networkMeetingTypes.join(", ") || "-"],
+    ["연애에서 중요하게 생각하는 가치", card.datingValues.join(", ") || "-"],
+    ["만나고 싶은 거리감", card.localDistance || "-"],
+    ["선호 활동", card.localActivities.join(", ") || "-"],
+    ["만남 가능 시간대", card.availableTimes.join(", ") || "-"],
+    ["함께하고 싶은 취미", card.hobbyIds.map(getHobbyLabel).join(", ") || "-"],
+    ["취미 숙련도", card.hobbyLevel || "-"],
+    ["원하는 참여 방식", card.hobbyParticipationTypes.join(", ") || "-"],
     ["카드 상태", CARD_STATUS_LABELS[card.status]],
     ["생성일", new Date(card.createdAt).toLocaleString("ko-KR")],
     ["수정일", new Date(card.updatedAt).toLocaleString("ko-KR")],

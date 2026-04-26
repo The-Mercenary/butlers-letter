@@ -84,7 +84,7 @@ export function DashboardSummary() {
       <section className="surface rounded-lg p-6 sm:p-8">
         <p className="text-sm font-bold text-teal-800">Welcome</p>
         <h1 className="mt-2 text-3xl font-black text-stone-950">{loading ? "대시보드를 준비하고 있습니다" : `${summary.name}님, 환영합니다.`}</h1>
-        <p className="mt-3 text-sm leading-6 text-stone-600">내 매칭 카드와 계정 정보를 이곳에서 관리할 수 있습니다.</p>
+        <p className="mt-3 text-sm leading-6 text-stone-600">내 인맥 카드와 계정 정보를 이곳에서 관리할 수 있습니다.</p>
         <Link
           href="/dashboard/cards/new"
           className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-teal-700 px-4 py-2 text-sm font-bold text-white transition hover:bg-teal-800"

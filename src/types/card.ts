@@ -1,5 +1,7 @@
 export type CardStatus = "draft" | "active" | "inactive";
 
+export type CardPurpose = "industry_network" | "dating" | "local_friend" | "hobby_buddy";
+
 export type EducationLevel =
   | "high_school"
   | "college"
@@ -27,21 +29,35 @@ export type SocialPlatform =
 export interface PreferredRegion {
   sido: string;
   sigungu: string;
+  dong: string;
 }
 
 export interface MatchingCard {
   id: string;
   userId: string;
+  cardPurpose: CardPurpose | "";
   cardName: string;
   status: CardStatus;
   mainImageUrl: string;
+  selfIntroduction: string;
   educationLevel: EducationLevel | "";
   jobType: JobType | "";
   preferredAgeRanges: string[];
-  marriageTimelines: string[];
+  meetingTimelines: string[];
   partnerPriority: string[];
   reasonsForUse: string[];
   preferredRegions: PreferredRegion[];
+  industryRole: string;
+  careerRange: string;
+  desiredIndustryRoles: string[];
+  networkMeetingTypes: string[];
+  datingValues: string[];
+  localDistance: string;
+  localActivities: string[];
+  availableTimes: string[];
+  hobbyIds: string[];
+  hobbyLevel: string;
+  hobbyParticipationTypes: string[];
   agreedCardDisclosure: boolean;
   agreedContactDisclosure: boolean;
   createdAt: string;
@@ -51,16 +67,29 @@ export interface MatchingCard {
 export interface MatchingCardRow {
   id: string;
   user_id: string;
+  card_purpose: CardPurpose | null;
   card_name: string;
   status: CardStatus;
   main_image_url: string | null;
+  self_introduction: string | null;
   education_level: EducationLevel | null;
   job_type: JobType | null;
   preferred_age_ranges: string[] | null;
-  marriage_timelines: string[] | null;
+  meeting_timelines: string[] | null;
   partner_priority: string[] | null;
   reasons_for_use: string[] | null;
   preferred_regions: PreferredRegion[] | null;
+  industry_role: string | null;
+  career_range: string | null;
+  desired_industry_roles: string[] | null;
+  network_meeting_types: string[] | null;
+  dating_values: string[] | null;
+  local_distance: string | null;
+  local_activities: string[] | null;
+  available_times: string[] | null;
+  hobby_ids: string[] | null;
+  hobby_level: string | null;
+  hobby_participation_types: string[] | null;
   agreed_card_disclosure: boolean;
   agreed_contact_disclosure: boolean;
   created_at: string;

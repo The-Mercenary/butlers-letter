@@ -25,12 +25,15 @@ export interface UserProfile {
   phone: string;
   sido: string;
   sigungu: string;
+  dong: string;
+  industryType: string;
   agreedTerms: boolean;
   agreedPrivacy: boolean;
   agreedSensitiveInfo: boolean;
   agreedThirdParty: boolean;
   agreedAgeOver19: boolean;
   agreedMarketing: boolean;
+  agreedSajuAnalysis: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -45,12 +48,15 @@ export interface UserProfileRow {
   phone: string;
   sido: string;
   sigungu: string;
+  dong: string | null;
+  industry_type: string | null;
   agreed_terms: boolean;
   agreed_privacy: boolean;
   agreed_sensitive_info: boolean;
   agreed_third_party: boolean;
   agreed_age_over_19: boolean;
   agreed_marketing: boolean;
+  agreed_saju_analysis: boolean | null;
   created_at: string;
   updated_at: string;
 }

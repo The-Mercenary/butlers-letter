@@ -5,7 +5,8 @@ import { Button } from "@/components/common/Button";
 import { FormField } from "@/components/common/FormField";
 import { SelectField } from "@/components/common/SelectField";
 import { BIRTH_TIME_OPTIONS, getBirthTimeLabel } from "@/lib/constants/birthTimes";
-import { SIDO_OPTIONS, getSigunguOptions } from "@/lib/constants/regions";
+import { INDUSTRY_TYPES } from "@/lib/constants/industries";
+import { DEFAULT_DONG, SIDO_OPTIONS, getDongOptions, getSigunguOptions } from "@/lib/constants/regions";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { toUserProfile } from "@/lib/supabase/mappers";
 import { normalizePhone } from "@/lib/utils/formatPhone";
@@ -19,6 +20,8 @@ export function ProfileSettingsForm() {
     phone: "",
     sido: "",
     sigungu: "",
+    dong: DEFAULT_DONG,
+    industryType: "",
     birthTimeCode: "unknown",
   });
   const [editMode, setEditMode] = useState(false);
@@ -29,6 +32,7 @@ export function ProfileSettingsForm() {
   const [error, setError] = useState("");
 
   const sigunguOptions = useMemo(() => getSigunguOptions(values.sido), [values.sido]);
+  const dongOptions = useMemo(() => getDongOptions(values.sido, values.sigungu), [values.sido, values.sigungu]);
 
   useEffect(() => {
     async function loadProfile() {
@@ -68,12 +72,15 @@ export function ProfileSettingsForm() {
             phone: String(user.user_metadata?.phone ?? ""),
             sido: String(user.user_metadata?.sido ?? ""),
             sigungu: String(user.user_metadata?.sigungu ?? ""),
+            dong: String(user.user_metadata?.dong ?? DEFAULT_DONG),
+            industryType: String(user.user_metadata?.industry_type ?? "기타"),
             agreedTerms: Boolean(user.user_metadata?.agreed_terms),
             agreedPrivacy: Boolean(user.user_metadata?.agreed_privacy),
             agreedSensitiveInfo: Boolean(user.user_metadata?.agreed_sensitive_info),
             agreedThirdParty: Boolean(user.user_metadata?.agreed_third_party),
             agreedAgeOver19: Boolean(user.user_metadata?.agreed_age_over_19),
             agreedMarketing: Boolean(user.user_metadata?.agreed_marketing),
+            agreedSajuAnalysis: Boolean(user.user_metadata?.agreed_saju_analysis),
             createdAt: user.created_at,
             updatedAt: user.updated_at ?? user.created_at,
           } as UserProfile);
@@ -84,6 +91,8 @@ export function ProfileSettingsForm() {
         phone: mapped.phone,
         sido: mapped.sido,
         sigungu: mapped.sigungu,
+        dong: mapped.dong,
+        industryType: mapped.industryType,
         birthTimeCode: mapped.birthTimeCode,
       });
       setLoading(false);
@@ -96,7 +105,8 @@ export function ProfileSettingsForm() {
     setValues((current) => ({
       ...current,
       [key]: value,
-      ...(key === "sido" ? { sigungu: "" } : {}),
+      ...(key === "sido" ? { sigungu: "", dong: DEFAULT_DONG } : {}),
+      ...(key === "sigungu" ? { dong: DEFAULT_DONG } : {}),
     }));
   }
 
@@ -119,6 +129,8 @@ export function ProfileSettingsForm() {
         phone: normalizePhone(values.phone),
         sido: values.sido,
         sigungu: values.sigungu,
+        dong: values.dong,
+        industry_type: values.industryType,
         birth_time_code: values.birthTimeCode,
         updated_at: new Date().toISOString(),
       })
@@ -137,6 +149,8 @@ export function ProfileSettingsForm() {
       phone: normalizePhone(values.phone),
       sido: values.sido,
       sigungu: values.sigungu,
+      dong: values.dong,
+      industryType: values.industryType,
       birthTimeCode: values.birthTimeCode,
       updatedAt: new Date().toISOString(),
     });
@@ -159,7 +173,8 @@ export function ProfileSettingsForm() {
     ["태어난 시간", getBirthTimeLabel(profile.birthTimeCode)],
     ["성별", profile.gender === "male" ? "남성" : "여성"],
     ["휴대전화번호", profile.phone],
-    ["거주지", `${profile.sido} ${profile.sigungu}`],
+    ["거주지", `${profile.sido} ${profile.sigungu} ${profile.dong}`],
+    ["직종", profile.industryType],
   ];
 
   return (
@@ -229,6 +244,24 @@ export function ProfileSettingsForm() {
             onChange={(event) => setValue("sigungu", event.target.value)}
             error={errors.sigungu}
             disabled={!values.sido}
+          />
+          <SelectField
+            id="dong"
+            label="거주지 읍/면/동"
+            options={dongOptions}
+            value={values.dong}
+            onChange={(event) => setValue("dong", event.target.value)}
+            error={errors.dong}
+            disabled={!values.sigungu}
+            help="특정 동을 정하지 않으려면 전체를 선택해 주세요."
+          />
+          <SelectField
+            id="industryType"
+            label="직종"
+            options={INDUSTRY_TYPES}
+            value={values.industryType}
+            onChange={(event) => setValue("industryType", event.target.value)}
+            error={errors.industryType}
           />
           <div className="sm:col-span-2 flex flex-col gap-2 sm:flex-row sm:justify-end">
             <Button type="button" variant="secondary" onClick={() => setEditMode(false)}>

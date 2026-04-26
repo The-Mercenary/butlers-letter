@@ -1,7 +1,8 @@
 import type { BirthTimeCode, Gender } from "@/types/user";
 import { calculateAge } from "@/lib/utils/calculateAge";
 import { isKoreanMobilePhone, normalizePhone } from "@/lib/utils/formatPhone";
-import { getSigunguOptions } from "@/lib/constants/regions";
+import { INDUSTRY_TYPES } from "@/lib/constants/industries";
+import { getDongOptions, getSigunguOptions } from "@/lib/constants/regions";
 
 export interface SignupFormValues {
   email: string;
@@ -16,12 +17,15 @@ export interface SignupFormValues {
   phone: string;
   sido: string;
   sigungu: string;
+  dong: string;
+  industryType: string;
   agreedTerms: boolean;
   agreedPrivacy: boolean;
   agreedSensitiveInfo: boolean;
   agreedThirdParty: boolean;
   agreedAgeOver19: boolean;
   agreedMarketing: boolean;
+  agreedSajuAnalysis: boolean;
 }
 
 export interface ProfileEditValues {
@@ -29,6 +33,8 @@ export interface ProfileEditValues {
   phone: string;
   sido: string;
   sigungu: string;
+  dong: string;
+  industryType: string;
   birthTimeCode: BirthTimeCode;
 }
 
@@ -126,11 +132,20 @@ export function validateSignup(values: SignupFormValues): ValidationErrors<keyof
     errors.sigungu = "시/군/구를 선택해 주세요.";
   }
 
+  if (!values.dong || !getDongOptions(values.sido, values.sigungu).includes(values.dong)) {
+    errors.dong = "읍/면/동을 선택해 주세요.";
+  }
+
+  if (!values.industryType || !INDUSTRY_TYPES.includes(values.industryType as (typeof INDUSTRY_TYPES)[number])) {
+    errors.industryType = "직종을 선택해 주세요.";
+  }
+
   if (!values.agreedTerms) errors.agreedTerms = "서비스 이용약관에 동의해 주세요.";
   if (!values.agreedPrivacy) errors.agreedPrivacy = "개인정보 수집 및 이용에 동의해 주세요.";
-  if (!values.agreedSensitiveInfo) errors.agreedSensitiveInfo = "민감정보 처리에 동의해 주세요.";
-  if (!values.agreedThirdParty) errors.agreedThirdParty = "개인정보 제3자 제공 동의가 필요합니다.";
+  if (!values.agreedSensitiveInfo) errors.agreedSensitiveInfo = "프로필 정보 활용에 동의해 주세요.";
+  if (!values.agreedThirdParty) errors.agreedThirdParty = "상호 동의 시 연락처 공개에 동의해 주세요.";
   if (!values.agreedAgeOver19) errors.agreedAgeOver19 = "만 19세 이상임을 확인해 주세요.";
+  if (!values.agreedSajuAnalysis) errors.agreedSajuAnalysis = "성향 정보 생성 및 활용에 동의해 주세요.";
 
   return errors;
 }
@@ -154,6 +169,14 @@ export function validateProfileEdit(values: ProfileEditValues): ValidationErrors
     errors.sigungu = "시/군/구를 선택해 주세요.";
   }
 
+  if (!values.dong || !getDongOptions(values.sido, values.sigungu).includes(values.dong)) {
+    errors.dong = "읍/면/동을 선택해 주세요.";
+  }
+
+  if (!values.industryType || !INDUSTRY_TYPES.includes(values.industryType as (typeof INDUSTRY_TYPES)[number])) {
+    errors.industryType = "직종을 선택해 주세요.";
+  }
+
   return errors;
 }
 
@@ -167,11 +190,14 @@ export function toProfileRow(values: SignupFormValues) {
     phone: normalizePhone(values.phone),
     sido: values.sido,
     sigungu: values.sigungu,
+    dong: values.dong,
+    industry_type: values.industryType,
     agreed_terms: values.agreedTerms,
     agreed_privacy: values.agreedPrivacy,
     agreed_sensitive_info: values.agreedSensitiveInfo,
     agreed_third_party: values.agreedThirdParty,
     agreed_age_over_19: values.agreedAgeOver19,
     agreed_marketing: values.agreedMarketing,
+    agreed_saju_analysis: values.agreedSajuAnalysis,
   };
 }

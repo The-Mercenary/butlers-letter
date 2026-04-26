@@ -7,8 +7,8 @@ import { ProcessSection } from "@/components/home/ProcessSection";
 import { TrustSection } from "@/components/home/TrustSection";
 
 export const metadata: Metadata = {
-  title: "Butler's Letter | 결혼을 전제로 한 프라이빗 매칭 레터",
-  description: "Butler's Letter는 결혼을 진지하게 생각하는 사람들을 위한 프라이빗 프로필 기반 매칭 레터 서비스입니다.",
+  title: "Butler's Letter | 프라이빗 인맥 추천 서비스",
+  description: "Butler's Letter는 원하는 목적에 맞는 사람을 신중하게 추천받고, 서로 동의한 경우에만 연락처를 공개하는 서비스입니다.",
 };
 
 export default function Home() {

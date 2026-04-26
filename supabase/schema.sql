@@ -12,12 +12,15 @@ create table if not exists public.user_profiles (
   phone text not null,
   sido text not null,
   sigungu text not null,
+  dong text not null default '전체',
+  industry_type text not null default '기타',
   agreed_terms boolean not null default false,
   agreed_privacy boolean not null default false,
   agreed_sensitive_info boolean not null default false,
   agreed_third_party boolean not null default false,
   agreed_age_over_19 boolean not null default false,
   agreed_marketing boolean not null default false,
+  agreed_saju_analysis boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -25,18 +28,49 @@ create table if not exists public.user_profiles (
 create table if not exists public.matching_cards (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.user_profiles(id) on delete cascade,
+  card_purpose text check (card_purpose in ('industry_network', 'dating', 'local_friend', 'hobby_buddy')),
   card_name text not null,
   status text not null default 'draft' check (status in ('draft', 'active', 'inactive')),
   main_image_url text,
+  self_introduction text not null default '',
   education_level text check (education_level in ('high_school', 'college', 'university', 'master', 'doctor', 'none')),
   job_type text check (job_type in ('professional', 'public_sector', 'office_worker', 'business_owner', 'freelancer', 'other')),
   preferred_age_ranges text[] not null default '{}',
-  marriage_timelines text[] not null default '{}',
+  meeting_timelines text[] not null default '{}',
   partner_priority text[] not null default '{}',
   reasons_for_use text[] not null default '{}',
   preferred_regions jsonb not null default '[]'::jsonb,
+  industry_role text,
+  career_range text,
+  desired_industry_roles text[] not null default '{}',
+  network_meeting_types text[] not null default '{}',
+  dating_values text[] not null default '{}',
+  local_distance text,
+  local_activities text[] not null default '{}',
+  available_times text[] not null default '{}',
+  hobby_ids text[] not null default '{}',
+  hobby_level text,
+  hobby_participation_types text[] not null default '{}',
   agreed_card_disclosure boolean not null default false,
   agreed_contact_disclosure boolean not null default false,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.saju_profiles (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null unique references public.user_profiles(id) on delete cascade,
+  calendar_type text not null default 'solar' check (calendar_type = 'solar'),
+  birth_date date not null,
+  birth_time_code text not null default 'unknown' check (
+    birth_time_code in ('unknown', 'ja', 'chuk', 'in', 'myo', 'jin', 'sa', 'oh', 'mi', 'shin', 'yu', 'sul', 'hae')
+  ),
+  day_pillar text,
+  personality_summary text,
+  dating_points text[] not null default '{}',
+  compatibility_keywords text[] not null default '{}',
+  raw_result jsonb not null default '{}'::jsonb,
+  calculated_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -78,6 +112,11 @@ create trigger set_matching_cards_updated_at
 before update on public.matching_cards
 for each row execute function public.set_updated_at();
 
+drop trigger if exists set_saju_profiles_updated_at on public.saju_profiles;
+create trigger set_saju_profiles_updated_at
+before update on public.saju_profiles
+for each row execute function public.set_updated_at();
+
 drop trigger if exists set_social_accounts_updated_at on public.social_accounts;
 create trigger set_social_accounts_updated_at
 before update on public.social_accounts
@@ -100,12 +139,15 @@ begin
     phone,
     sido,
     sigungu,
+    dong,
+    industry_type,
     agreed_terms,
     agreed_privacy,
     agreed_sensitive_info,
     agreed_third_party,
     agreed_age_over_19,
-    agreed_marketing
+    agreed_marketing,
+    agreed_saju_analysis
   )
   values (
     new.id,
@@ -117,14 +159,47 @@ begin
     coalesce(new.raw_user_meta_data->>'phone', ''),
     coalesce(new.raw_user_meta_data->>'sido', ''),
     coalesce(new.raw_user_meta_data->>'sigungu', ''),
+    coalesce(nullif(new.raw_user_meta_data->>'dong', ''), '전체'),
+    coalesce(nullif(new.raw_user_meta_data->>'industry_type', ''), '기타'),
     coalesce((new.raw_user_meta_data->>'agreed_terms')::boolean, false),
     coalesce((new.raw_user_meta_data->>'agreed_privacy')::boolean, false),
     coalesce((new.raw_user_meta_data->>'agreed_sensitive_info')::boolean, false),
     coalesce((new.raw_user_meta_data->>'agreed_third_party')::boolean, false),
     coalesce((new.raw_user_meta_data->>'agreed_age_over_19')::boolean, false),
-    coalesce((new.raw_user_meta_data->>'agreed_marketing')::boolean, false)
+    coalesce((new.raw_user_meta_data->>'agreed_marketing')::boolean, false),
+    coalesce((new.raw_user_meta_data->>'agreed_saju_analysis')::boolean, false)
   )
   on conflict (id) do nothing;
+
+  return new;
+end;
+$$;
+
+create or replace function public.sync_saju_profile_from_user_profile()
+returns trigger
+security definer
+set search_path = public
+language plpgsql
+as $$
+begin
+  insert into public.saju_profiles (
+    user_id,
+    calendar_type,
+    birth_date,
+    birth_time_code,
+    raw_result
+  )
+  values (
+    new.id,
+    'solar',
+    new.birth_date,
+    new.birth_time_code,
+    jsonb_build_object('status', 'pending_research')
+  )
+  on conflict (user_id) do update
+    set birth_date = excluded.birth_date,
+        birth_time_code = excluded.birth_time_code,
+        updated_at = now();
 
   return new;
 end;
@@ -135,8 +210,14 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user_profile();
 
+drop trigger if exists sync_user_saju_profile on public.user_profiles;
+create trigger sync_user_saju_profile
+after insert or update of birth_date, birth_time_code on public.user_profiles
+for each row execute function public.sync_saju_profile_from_user_profile();
+
 alter table public.user_profiles enable row level security;
 alter table public.matching_cards enable row level security;
+alter table public.saju_profiles enable row level security;
 alter table public.matching_card_images enable row level security;
 alter table public.social_accounts enable row level security;
 
@@ -164,6 +245,22 @@ using (auth.uid() = id);
 drop policy if exists "Users can manage own cards" on public.matching_cards;
 create policy "Users can manage own cards"
 on public.matching_cards for all
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can read own saju profile" on public.saju_profiles;
+create policy "Users can read own saju profile"
+on public.saju_profiles for select
+using (auth.uid() = user_id);
+
+drop policy if exists "Users can insert own saju profile" on public.saju_profiles;
+create policy "Users can insert own saju profile"
+on public.saju_profiles for insert
+with check (auth.uid() = user_id);
+
+drop policy if exists "Users can update own saju profile" on public.saju_profiles;
+create policy "Users can update own saju profile"
+on public.saju_profiles for update
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 

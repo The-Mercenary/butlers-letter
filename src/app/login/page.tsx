@@ -4,7 +4,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata: Metadata = {
   title: "로그인",
-  description: "Butler's Letter 계정으로 로그인하고 내 매칭 카드를 관리하세요.",
+  description: "Butler's Letter 계정으로 로그인하고 내 인맥 카드를 관리하세요.",
 };
 
 export default function LoginPage() {

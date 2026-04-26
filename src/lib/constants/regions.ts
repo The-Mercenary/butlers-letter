@@ -87,3 +87,30 @@ export const SIDO_OPTIONS = KOREAN_REGIONS.map((region) => region.sido);
 export function getSigunguOptions(sido: string): string[] {
   return [...(KOREAN_REGIONS.find((region) => region.sido === sido)?.sigungu ?? [])];
 }
+
+export const DEFAULT_DONG = "전체";
+
+const DONG_OPTIONS: Record<string, string[]> = {
+  "서울특별시|강남구": [
+    "전체",
+    "개포동",
+    "논현동",
+    "대치동",
+    "도곡동",
+    "삼성동",
+    "세곡동",
+    "수서동",
+    "신사동",
+    "압구정동",
+    "역삼동",
+    "율현동",
+    "일원동",
+    "자곡동",
+    "청담동",
+  ],
+};
+
+export function getDongOptions(sido: string, sigungu: string): string[] {
+  if (!sido || !sigungu) return [];
+  return [...(DONG_OPTIONS[`${sido}|${sigungu}`] ?? [DEFAULT_DONG])];
+}

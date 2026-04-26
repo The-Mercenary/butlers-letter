@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { CARD_STATUS_LABELS } from "@/lib/constants/cardOptions";
+import { getCardPurposeLabel } from "@/lib/constants/recommendationPurposes";
 import type { MatchingCard } from "@/types/card";
 
 interface CardPreviewProps {
@@ -21,9 +22,14 @@ export function CardPreview({ card }: CardPreviewProps) {
         <div className="flex h-2/5 flex-col justify-between p-4">
           <div>
             <h2 className="truncate text-lg font-black text-stone-950">{card.cardName}</h2>
-            <p className="mt-2 inline-flex rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
-              {CARD_STATUS_LABELS[card.status]}
-            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <p className="inline-flex rounded-full bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
+                {CARD_STATUS_LABELS[card.status]}
+              </p>
+              <p className="inline-flex rounded-full bg-teal-50 px-3 py-1 text-xs font-bold text-teal-900">
+                {getCardPurposeLabel(card.cardPurpose)}
+              </p>
+            </div>
           </div>
           <p className="text-xs text-stone-500">자세히 보기</p>
         </div>

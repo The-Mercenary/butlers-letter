@@ -2,29 +2,29 @@ import { LockKeyhole, SearchCheck, ShieldCheck, SlidersHorizontal, UsersRound } 
 
 const trustItems = [
   {
-    title: "개인정보 보호",
-    description: "사용자의 개인정보와 프로필 정보는 매칭 검토 목적에 한해 사용되며, 동의 없이 외부에 판매하거나 공개하지 않습니다.",
-    icon: LockKeyhole,
-  },
-  {
-    title: "프로필 검수",
-    description: "허위 또는 부적절한 프로필은 검수 및 제한될 수 있는 구조로 확장할 수 있습니다.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "신중한 매칭",
-    description: "단순 조건뿐 아니라 선호 조건, 소개 내용, 가치관 정보를 함께 고려하는 구조를 지향합니다.",
+    title: "목적 기반 추천",
+    description: "데이트, 취미, 동네 친구, 업계 네트워크 등 사용자가 원하는 목적에 맞춰 사람을 추천합니다.",
     icon: SearchCheck,
   },
   {
-    title: "합리적인 이용 구조",
-    description: "적합한 후보가 없는 경우 무리하게 소개하지 않는 정책을 지향합니다. 결제 정책은 추후 확정합니다.",
-    icon: SlidersHorizontal,
+    title: "상호 동의 기반 연락처 공개",
+    description: "연락처는 한쪽이 일방적으로 볼 수 없습니다. 서로가 더 알아가고 싶다고 동의한 경우에만 추가 정보가 공개됩니다.",
+    icon: UsersRound,
   },
   {
-    title: "프라이빗 공개 방식",
-    description: "서로 관심 의사를 표현한 경우에만 더 많은 프로필 정보와 연락처 공개가 가능하도록 확장합니다.",
-    icon: UsersRound,
+    title: "개인정보 보호",
+    description: "등록한 개인정보와 프로필 정보는 서비스 이용 목적에 맞게 관리되며, 동의 없이 외부에 판매하거나 공개하지 않습니다.",
+    icon: LockKeyhole,
+  },
+  {
+    title: "신중한 프로필 운영",
+    description: "부적절하거나 허위로 의심되는 프로필은 제한될 수 있습니다.",
+    icon: ShieldCheck,
+  },
+  {
+    title: "다양한 관계 목적",
+    description: "연애뿐 아니라 취미, 동네, 직업 네트워크까지 다양한 목적의 연결을 지원할 수 있도록 설계합니다.",
+    icon: SlidersHorizontal,
   },
 ];
 
@@ -33,8 +33,8 @@ export function TrustSection() {
     <section className="bg-white py-16 sm:py-20">
       <div className="container-page">
         <div className="max-w-2xl">
-          <p className="text-sm font-bold text-teal-800">왜 믿을 수 있나요?</p>
-          <h2 className="mt-3 text-3xl font-black text-stone-950 sm:text-4xl">신중한 만남을 위한 기본 원칙</h2>
+          <p className="text-sm font-bold text-teal-800">왜 버틀러스레터인가요?</p>
+          <h2 className="mt-3 text-3xl font-black text-stone-950 sm:text-4xl">새로운 사람을 조심스럽게 발견하기 위한 원칙</h2>
         </div>
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {trustItems.map((item) => {

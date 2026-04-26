@@ -8,7 +8,8 @@ import { ConsentModal } from "@/components/common/ConsentModal";
 import { FormField } from "@/components/common/FormField";
 import { SelectField } from "@/components/common/SelectField";
 import { BIRTH_TIME_OPTIONS } from "@/lib/constants/birthTimes";
-import { SIDO_OPTIONS, getSigunguOptions } from "@/lib/constants/regions";
+import { INDUSTRY_TYPES } from "@/lib/constants/industries";
+import { DEFAULT_DONG, SIDO_OPTIONS, getDongOptions, getSigunguOptions } from "@/lib/constants/regions";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { getBirthDate, getBirthYearOptions, getDayOptions, getPasswordStrength, toProfileRow, validateSignup, type SignupFormValues } from "@/lib/validation/authValidation";
 import { normalizePhone } from "@/lib/utils/formatPhone";
@@ -25,19 +26,19 @@ const consentContents: ConsentContent[] = [
     key: "privacy",
     title: "개인정보 수집 및 이용 동의",
     required: true,
-    body: "이메일, 이름, 생년월일, 성별, 휴대전화번호, 거주지 등 회원 기본 정보를 계정 생성, 본인 프로필 관리, 매칭 검토 준비 목적에 한해 수집 및 이용합니다.",
+    body: "이메일, 이름, 생년월일, 성별, 휴대전화번호, 거주지, 직종 등 회원 기본 정보를 계정 생성, 본인 프로필 관리, 인맥 추천 준비 목적에 한해 수집 및 이용합니다.",
   },
   {
     key: "thirdParty",
-    title: "개인정보 제3자 제공 동의",
+    title: "상호 동의 시 연락처 공개 동의",
     required: true,
-    body: "MVP에서는 실제 제3자 제공 기능을 실행하지 않습니다. 다만 향후 상호 관심이 확인된 상대에게 일부 프로필 또는 연락처가 제공될 수 있는 구조를 준비하기 위한 동의 항목입니다.",
+    body: "MVP에서는 연락처 자동 공개 기능을 실행하지 않습니다. 다만 향후 서로가 더 알아가고 싶다고 동의한 경우에만 연락처가 공개될 수 있는 구조를 준비하기 위한 동의 항목입니다.",
   },
   {
     key: "sensitiveInfo",
-    title: "민감정보 처리 동의",
+    title: "프로필 정보 활용 동의",
     required: true,
-    body: "성별, 생년월일, 태어난 시간 등 사용자가 입력한 민감할 수 있는 정보를 매칭 카드 작성 및 향후 매칭 검토 준비 목적으로 처리합니다.",
+    body: "성별, 생년월일, 태어난 시간, 지역, 관심사 등 사용자가 입력한 프로필 정보를 목적 기반 사람 추천 기능을 준비하기 위해 활용합니다.",
   },
   {
     key: "ageOver19",
@@ -50,6 +51,12 @@ const consentContents: ConsentContent[] = [
     title: "마케팅 정보 수신 동의",
     required: false,
     body: "서비스 업데이트, 이벤트, 운영 안내 등 선택적 마케팅 정보를 이메일 또는 문자로 받을 수 있습니다. 동의하지 않아도 회원가입은 가능합니다.",
+  },
+  {
+    key: "sajuAnalysis",
+    title: "생년월일 및 태어난 시간 기반 성향 정보 생성/활용 동의",
+    required: true,
+    body: "입력한 생년월일과 태어난 시간은 향후 성향 기반 추천 기능을 위해 활용될 수 있습니다. 단, 이는 참고 정보이며 특정 관계나 만남의 결과를 보장하지 않습니다.",
   },
 ];
 
@@ -66,12 +73,15 @@ const initialValues: SignupFormValues = {
   phone: "",
   sido: "",
   sigungu: "",
+  dong: DEFAULT_DONG,
+  industryType: "",
   agreedTerms: false,
   agreedPrivacy: false,
   agreedSensitiveInfo: false,
   agreedThirdParty: false,
   agreedAgeOver19: false,
   agreedMarketing: false,
+  agreedSajuAnalysis: false,
 };
 
 export function SignupForm() {
@@ -87,12 +97,14 @@ export function SignupForm() {
   const monthOptions = useMemo(() => Array.from({ length: 12 }, (_, index) => String(index + 1)), []);
   const dayOptions = useMemo(() => getDayOptions(values.birthYear, values.birthMonth), [values.birthMonth, values.birthYear]);
   const sigunguOptions = useMemo(() => getSigunguOptions(values.sido), [values.sido]);
+  const dongOptions = useMemo(() => getDongOptions(values.sido, values.sigungu), [values.sido, values.sigungu]);
 
   function setValue<T extends keyof SignupFormValues>(key: T, value: SignupFormValues[T]) {
     setValues((current) => ({
       ...current,
       [key]: value,
-      ...(key === "sido" ? { sigungu: "" } : {}),
+      ...(key === "sido" ? { sigungu: "", dong: DEFAULT_DONG } : {}),
+      ...(key === "sigungu" ? { dong: DEFAULT_DONG } : {}),
     }));
   }
 
@@ -170,7 +182,7 @@ export function SignupForm() {
       <div className="mb-7">
         <p className="text-sm font-bold text-teal-800">Signup</p>
         <h1 className="mt-2 text-3xl font-black text-stone-950">회원가입</h1>
-        <p className="mt-3 text-sm leading-6 text-stone-600">기본 회원 정보를 등록하고 내 매칭 카드를 준비해 주세요.</p>
+        <p className="mt-3 text-sm leading-6 text-stone-600">기본 회원 정보를 등록하고 목적별 인맥 카드를 준비해 주세요.</p>
       </div>
 
       {missingConfig ? (
@@ -304,6 +316,24 @@ export function SignupForm() {
           error={errors.sigungu}
           disabled={!values.sido}
         />
+        <SelectField
+          id="dong"
+          label="거주지 읍/면/동"
+          options={dongOptions}
+          value={values.dong}
+          onChange={(event) => setValue("dong", event.target.value)}
+          error={errors.dong}
+          disabled={!values.sigungu}
+          help="특정 동을 정하지 않으려면 전체를 선택해 주세요."
+        />
+        <SelectField
+          id="industryType"
+          label="직종"
+          options={INDUSTRY_TYPES}
+          value={values.industryType}
+          onChange={(event) => setValue("industryType", event.target.value)}
+          error={errors.industryType}
+        />
       </div>
 
       <div className="mt-8 space-y-3">
@@ -316,6 +346,7 @@ export function SignupForm() {
             sensitiveInfo: "agreedSensitiveInfo",
             ageOver19: "agreedAgeOver19",
             marketing: "agreedMarketing",
+            sajuAnalysis: "agreedSajuAnalysis",
             cardDisclosure: "agreedTerms",
             contactDisclosure: "agreedTerms",
           } as const;

@@ -1,6 +1,4 @@
-import { LETTER_PRICE_KRW } from "@/lib/constants/cardOptions";
-
-const flow = ["회원가입", "내 카드 생성", "정보 입력", "레터 수신", "관심 표현", "상호 동의 시 연락처 공개"];
+const flow = ["회원가입", "내 카드 생성", "목적 선택", "추천 카드 확인", "관심 표현", "상호 동의 시 연락처 공개"];
 
 export function PricingConceptSection() {
   return (
@@ -10,10 +8,9 @@ export function PricingConceptSection() {
           <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
             <div>
               <p className="text-sm font-bold text-teal-800">가입하면 무엇이 기다리나요?</p>
-              <h2 className="mt-3 text-3xl font-black text-stone-950 sm:text-4xl">카드를 만들고, 레터를 기다리는 구조</h2>
+              <h2 className="mt-3 text-3xl font-black text-stone-950 sm:text-4xl">목적별 카드를 만들고, 필요한 인연을 발견하는 구조</h2>
               <p className="mt-5 text-sm leading-6 text-stone-600">
-                파트너 카드 1명을 받아보는 기준 가격은 {LETTER_PRICE_KRW.toLocaleString("ko-KR")}원을 지향합니다.
-                이번 MVP에서는 결제 기능을 구현하지 않습니다.
+                이번 MVP에서는 결제 기능을 노출하지 않습니다. 추천, 상호 관심, 연락처 공개 기능으로 확장할 수 있는 기본 구조를 먼저 준비합니다.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

@@ -78,7 +78,7 @@ export function CardGrid() {
       ) : cards.length === 0 ? (
         <EmptyState
           title="아직 만든 카드가 없습니다."
-          description="내 정보를 바탕으로 첫 번째 매칭 카드를 만들어 보세요."
+          description="원하는 목적에 맞는 첫 번째 인맥 카드를 만들어 보세요."
           action={
             <Link href="/dashboard/cards/new" className="inline-flex min-h-10 items-center justify-center rounded-md bg-teal-700 px-4 py-2 text-sm font-bold text-white">
               새 카드 만들기
